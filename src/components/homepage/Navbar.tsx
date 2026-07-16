@@ -3,6 +3,7 @@
 import { authClient } from "@/lib/auth-client";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
     FiLayout,
     FiLogIn,
@@ -16,24 +17,51 @@ const NAV_LINKS = [
     { href: "/", label: "Home" },
     { href: "/items", label: "Browse Items" },
     { href: "/items/add", label: "Report Item" },
-    { href: "/how-it-works", label: "How It Works" },
+    { href: "/howItWorks", label: "How It Works" },
     { href: "/about", label: "About" },
 ];
 
+type UserRole = "user" | "admin";
+
+interface SessionUserRole {
+    role?: string;
+}
+
 const Navbar = () => {
+    const pathname = usePathname();
+
     const { data: session } = authClient.useSession();
 
     const userData = session?.user;
+
+    const sessionUser = session?.user as
+        | SessionUserRole
+        | undefined;
+
+    const userRole: UserRole =
+        sessionUser?.role?.toLowerCase() === "admin"
+            ? "admin"
+            : "user";
+
+    const dashboardPath =
+        userRole === "admin"
+            ? "/dashboard/admin"
+            : "/dashboard/user";
 
     const handleSignOut = async () => {
         await authClient.signOut();
     };
 
+    if (pathname.startsWith("/dashboard")) {
+        return null;
+    }
+
     return (
         <header className="sticky top-0 z-50 px-4 pt-4">
             <div className="mx-auto flex min-h-20 w-full max-w-7xl items-center justify-between rounded-2xl border border-[#D8CFBC] bg-[#F7F3EA]/90 px-5 shadow-lg backdrop-blur-xl md:px-7">
-                {/* Left: mobile menu and logo */}
+                {/* Left side */}
                 <div className="flex items-center gap-2">
+                    {/* Mobile dropdown */}
                     <div className="dropdown lg:hidden">
                         <button
                             tabIndex={0}
@@ -71,16 +99,20 @@ const Navbar = () => {
                                                 />
                                             ) : (
                                                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#412D15] font-semibold text-white">
-                                                    {userData.name.charAt(0).toUpperCase()}
+                                                    {userData.name
+                                                        .charAt(0)
+                                                        .toUpperCase()}
                                                 </div>
                                             )}
 
-                                            <span className="font-medium">{userData.name}</span>
+                                            <span className="font-medium">
+                                                {userData.name}
+                                            </span>
                                         </div>
                                     </li>
 
                                     <li>
-                                        <Link href="/dashboard">
+                                        <Link href={dashboardPath}>
                                             <FiLayout />
                                             Dashboard
                                         </Link>
@@ -117,6 +149,7 @@ const Navbar = () => {
                         </ul>
                     </div>
 
+                    {/* Logo */}
                     <Link
                         href="/"
                         className="flex items-center gap-3"
@@ -164,7 +197,9 @@ const Navbar = () => {
                                     />
                                 ) : (
                                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#412D15] font-semibold text-white">
-                                        {userData.name.charAt(0).toUpperCase()}
+                                        {userData.name
+                                            .charAt(0)
+                                            .toUpperCase()}
                                     </div>
                                 )}
 
@@ -174,7 +209,7 @@ const Navbar = () => {
                             </div>
 
                             <Link
-                                href="/dashboard"
+                                href={dashboardPath}
                                 className="btn hidden h-11 min-h-0 rounded-xl border border-[#CBBFA8] bg-transparent px-4 font-semibold text-[#1F150C] hover:border-[#412D15] hover:bg-[#E1DCC9]/50 lg:inline-flex"
                             >
                                 <FiLayout className="text-lg" />
